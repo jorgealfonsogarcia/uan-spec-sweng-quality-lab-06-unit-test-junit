@@ -2,7 +2,11 @@ package edu.odu.cs;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.apache.commons.lang3.math.NumberUtils.DOUBLE_ZERO;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -23,30 +27,32 @@ class TestRanges {
     }
 
     @Test
-    void testSubtractWhenIntervalWidthIsZeroThenDoNothing() {
+    void testRemoveWhenIntervalWidthIsZeroThenDoNothing() {
         final var emptyInterval = new Interval(DOUBLE_ZERO, DOUBLE_ZERO);
         final var ranges = new Ranges(DOUBLE_ZERO, DOUBLE_ZERO);
 
-        ranges.subtract(emptyInterval);
-        assertThat(ranges.remaining.getFirst().width(), equalTo(DOUBLE_ZERO));
+        ranges.remove(emptyInterval);
+
+        final var remaining = extractRemainingAsList(ranges);
+        assertThat(remaining.get(INTEGER_ZERO).width(), equalTo(DOUBLE_ZERO));
     }
 
     @Test
-    void testSubtractWhenThereIsNotRemainingThenDoNothing() {
+    void testRemoveWhenThereIsNotRemainingThenDoNothing() {
         final var low = 1.0D;
         final var high = 10.D;
         final var ranges = new Ranges(low, high);
-        ranges.remaining.removeIf(interval -> true);
 
         final var intervalToSubtract = new Interval(low, high);
 
-        ranges.subtract(intervalToSubtract);
+        ranges.remove(intervalToSubtract);
 
-        assertThat(ranges.remaining.isEmpty(), equalTo(true));
+        final var remaining = extractRemainingAsList(ranges);
+        assertThat(remaining.isEmpty(), equalTo(true));
     }
 
     @Test
-    void testSubtractWhenCurrentMinIsGreaterThanIntervalMinThenDoNothing() {
+    void testRemoveWhenCurrentMinIsGreaterThanIntervalMinThenDoNothing() {
         final var rangeLow = 10.D;
         final var rangeHigh = 20.D;
         final var ranges = new Ranges(rangeLow, rangeHigh);
@@ -55,16 +61,17 @@ class TestRanges {
         final var intervalMax = 9.0D;
         final var intervalToSubtract = new Interval(intervalMin, intervalMax);
 
-        ranges.subtract(intervalToSubtract);
+        ranges.remove(intervalToSubtract);
 
-        final var result = ranges.remaining.getFirst();
+        final var remaining = extractRemainingAsList(ranges);
+        final var result = remaining.get(INTEGER_ZERO);
         assertThat(result.width(), equalTo(10.0D));
         assertThat(result.getMin(), equalTo(10.0D));
         assertThat(result.getMax(), equalTo(20.0D));
     }
 
     @Test
-    void testSubtractWhenCurrentMinIsLessThanOrEqualToIntervalMinAndRangeDoesNotOverlapThenDoNothing() {
+    void testRemoveWhenCurrentMinIsLessThanOrEqualToIntervalMinAndRangeDoesNotOverlapThenDoNothing() {
         final var rangeLow = 10.D;
         final var rangeHigh = 20.D;
         final var ranges = new Ranges(rangeLow, rangeHigh);
@@ -73,16 +80,17 @@ class TestRanges {
         final var intervalMax = 30.0D;
         final var intervalToSubtract = new Interval(intervalMin, intervalMax);
 
-        ranges.subtract(intervalToSubtract);
+        ranges.remove(intervalToSubtract);
 
-        final var result = ranges.remaining.getFirst();
+        final var remaining = extractRemainingAsList(ranges);
+        final var result = remaining.get(INTEGER_ZERO);
         assertThat(result.width(), equalTo(10.0D));
         assertThat(result.getMin(), equalTo(10.0D));
         assertThat(result.getMax(), equalTo(20.0D));
     }
 
     @Test
-    void testSubtractWhenIntervalOverlapsRangeAndLowerPartWidthIsGreaterThanZeroThenRemoveIntervalAndAddLowerPart() {
+    void testRemoveWhenIntervalOverlapsRangeAndLowerPartWidthIsGreaterThanZeroThenRemoveIntervalAndAddLowerPart() {
         final var rangeLow = 10.0D;
         final var rangeHigh = 20.0D;
         final var ranges = new Ranges(rangeLow, rangeHigh);
@@ -91,16 +99,17 @@ class TestRanges {
         final var intervalMax = 25.0D;
         final var intervalToSubtract = new Interval(intervalMin, intervalMax);
 
-        ranges.subtract(intervalToSubtract);
+        ranges.remove(intervalToSubtract);
 
-        final var result = ranges.remaining.getFirst();
+        final var remaining = extractRemainingAsList(ranges);
+        final var result = remaining.get(INTEGER_ZERO);
         assertThat(result.width(), equalTo(5.0D));
         assertThat(result.getMin(), equalTo(10.0D));
         assertThat(result.getMax(), equalTo(15.0D));
     }
 
     @Test
-    void testSubtractWhenIntervalOverlapsRangeAndUpperPartWidthIsGreaterThanZeroThenRemoveIntervalAndAddUpperPart() {
+    void testRemoveWhenIntervalOverlapsRangeAndUpperPartWidthIsGreaterThanZeroThenRemoveIntervalAndAddUpperPart() {
         final var rangeLow = 10.D;
         final var rangeHigh = 20.D;
         final var ranges = new Ranges(rangeLow, rangeHigh);
@@ -109,9 +118,10 @@ class TestRanges {
         final var intervalMax = 15.0D;
         final var intervalToSubtract = new Interval(intervalMin, intervalMax);
 
-        ranges.subtract(intervalToSubtract);
+        ranges.remove(intervalToSubtract);
 
-        final var result = ranges.remaining.getFirst();
+        final var remaining = extractRemainingAsList(ranges);
+        final var result = remaining.get(INTEGER_ZERO);
         assertThat(result.width(), equalTo(5.0D));
         assertThat(result.getMin(), equalTo(15.0D));
         assertThat(result.getMax(), equalTo(20.0D));
@@ -126,5 +136,27 @@ class TestRanges {
         final var result = ranges.toString();
 
         assertThat(result, equalTo("[(10.0,20.0)]"));
+    }
+
+    @Test
+    void testSumWhenIntervalWasRemovedFromRangeThenResultIsLessThanOriginalWidth() {
+        final var rangeLow = 10.D;
+        final var rangeHigh = 20.D;
+        final var ranges = new Ranges(rangeLow, rangeHigh);
+
+        final var intervalMin = 1.0D;
+        final var intervalMax = 15.0D;
+        final var intervalToSubtract = new Interval(intervalMin, intervalMax);
+        ranges.remove(intervalToSubtract);
+
+        final var result = ranges.sum();
+
+        assertThat(result, equalTo(5.0D));
+    }
+
+    private List<Interval> extractRemainingAsList(final Ranges ranges) {
+        final var list = new ArrayList<Interval>();
+        ranges.iterator().forEachRemaining(list::add);
+        return list;
     }
 }
