@@ -27,6 +27,18 @@
             <version>5.8.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.odu.cs.cs350</groupId>
+            <artifactId>unitTesting</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/unitTestTracker.jar</systemPath>
+        </dependency>
     </dependencies>
 
 </project>

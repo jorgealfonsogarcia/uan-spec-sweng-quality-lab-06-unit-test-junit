@@ -33,7 +33,7 @@ public class Highway {
             double x0 = input.nextDouble();
             double x1 = input.nextDouble();
             Interval covered = new Interval(x0, x1);
-            gaps.subtract(covered);
+            gaps.remove(covered);
         }
         double uncovered = gaps.sum();
         System.out.printf("Not covered: %7.1f%n", uncovered);
