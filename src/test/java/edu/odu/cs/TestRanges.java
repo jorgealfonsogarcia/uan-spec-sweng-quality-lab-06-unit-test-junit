@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.commons.lang3.math.NumberUtils.DOUBLE_ZERO;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
+import static org.apache.commons.lang3.math.NumberUtils.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -125,6 +124,32 @@ class TestRanges {
         assertThat(result.width(), equalTo(5.0D));
         assertThat(result.getMin(), equalTo(15.0D));
         assertThat(result.getMax(), equalTo(20.0D));
+    }
+
+    @Test
+    void testRemoveWhenIntervalOverlapsRangeAndPartsWidthIsGreaterThanZeroThenRemoveIntervalAndAddParts() {
+        final var rangeLow = 10.D;
+        final var rangeHigh = 20.D;
+        final var ranges = new Ranges(rangeLow, rangeHigh);
+
+        final var intervalMin = 13.0D;
+        final var intervalMax = 17.0D;
+        final var intervalToSubtract = new Interval(intervalMin, intervalMax);
+
+        ranges.remove(intervalToSubtract);
+
+        final var remaining = extractRemainingAsList(ranges);
+        assertThat(remaining.size(), equalTo(2));
+
+        final var result1 = remaining.get(INTEGER_ZERO);
+        assertThat(result1.width(), equalTo(3.0D));
+        assertThat(result1.getMin(), equalTo(10.0D));
+        assertThat(result1.getMax(), equalTo(13.0D));
+
+        final var result2 = remaining.get(INTEGER_ONE);
+        assertThat(result2.width(), equalTo(3.0D));
+        assertThat(result2.getMin(), equalTo(17.0D));
+        assertThat(result2.getMax(), equalTo(20.0D));
     }
 
     @Test
